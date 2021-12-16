@@ -29,9 +29,17 @@ let x n = "x" ^ string_of_int n
   Par exemple, str_of_term (Var 3) retourne "x3", str_of_term (Add
    (Var 1, Const 3)) retourne "(+ x1 3)" et str_of_test (Equals (Var
    2, Const 2)) retourne "(= x2 2)".  *)
-let rec str_of_term t = "TODO" (* À compléter *)
+let rec str_of_term t =
+  match t with
+  | Const (int) -> string_of_int int
+  | Var (int) -> "x" ^ string_of_int int
+  | Add (term1, term2) -> "(+ " ^ str_of_term term1 ^ " " ^ str_of_term term2 ^ ")"
+  | Mult (term1, term2) -> "(* " ^ str_of_term term1 ^ " " ^ str_of_term term2 ^ ")"
 
-let str_of_test t = "TODO" (* À compléter *)
+let str_of_test t = 
+  match t with
+  | Equals (term1, term2) -> "(= " ^ str_of_term term1 ^ " " ^ str_of_term term2 ^ ")"
+  | LessThan (term1, term2) -> "(< " ^ str_of_term term1 ^ " " ^ str_of_term term2 ^ ")"
 
 let string_repeat s n =
   Array.fold_left (^) "" (Array.make n s)
@@ -41,7 +49,12 @@ let string_repeat s n =
    exprime que le tuple (t1, ..., tk) est dans l'invariant.  Par
    exemple, str_condition [Var 1; Const 10] retourne "(Invar x1 10)".
    *)
-let str_condition l = "TODO" (* À compléter *)
+let str_condition l =
+  let rec str_condition_aux l acc =
+    match l with
+    | current_element::other_elements -> str_condition_aux other_elements (acc ^ " " ^ str_of_term current_element)
+    | [] -> acc ^ ")"
+  in str_condition_aux l "(Invar"
 
 (* Question 3. Écrire une fonction str_assert_for_all qui prend en
    argument un entier n et une chaîne de caractères s, et retourne
@@ -53,7 +66,8 @@ let str_condition l = "TODO" (* À compléter *)
 
 let str_assert s = "(assert " ^ s ^ ")"
 
-let str_assert_forall n s = "TODO" (* À compléter *)
+let str_assert_forall n s =
+  str_assert ("(forall ((" ^ List.nth (String.split_on_char ' ' s) 1 ^ " Int) (" ^ List.nth (String.split_on_char ' ' s) 2 ^ " Int)) (" ^ s ^ "))")
 
 (* Question 4. Nous donnons ci-dessous une définition possible de la
    fonction smt_lib_of_wa. Complétez-la en écrivant les définitions de
@@ -66,7 +80,7 @@ let smtlib_of_wa p =
     ^"(declare-fun Invar (" ^ string_repeat "Int " n ^  ") Bool)" in
   let loop_condition p =
     "; la relation Invar est un invariant de boucle\n"
-    ^"TODO" (* À compléter *) in
+    ^(str_condition p.loopcond) (* À compléter *) in
   let initial_condition p =
     "; la relation Invar est vraie initialement\n"
     ^str_assert (str_condition p.inits) in
